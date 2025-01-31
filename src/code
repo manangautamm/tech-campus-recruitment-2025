@@ -1,0 +1,53 @@
+import sys
+import os
+from datetime import datetime
+
+def extract_logs(input_file, target_date):
+    """
+    Efficiently extract logs for a specific date from a large log file.
+    
+    Args:
+        input_file (str): Path to the large log file
+        target_date (str): Date to extract logs for (YYYY-MM-DD format)
+    """
+    # Ensure output directory exists
+    os.makedirs('output', exist_ok=True)
+    output_file = f'output/output_{target_date}.txt'
+    
+    # Validate input date
+    try:
+        datetime.strptime(target_date, '%Y-%m-%d')
+    except ValueError:
+        print(f"Invalid date format. Use YYYY-MM-DD. Received: {target_date}")
+        sys.exit(1)
+    
+    # Efficient log extraction using generators and minimal memory
+    def log_reader(filename):
+        with open(filename, 'r') as file:
+            for line in file:
+                yield line.strip()
+    
+    # Extract and write matching logs
+    with open(output_file, 'w') as outfile:
+        for log_entry in log_reader(input_file):
+            if log_entry.startswith(target_date):
+                outfile.write(log_entry + '\n')
+    
+    # Print number of logs extracted
+    with open(output_file, 'r') as outfile:
+        log_count = sum(1 for _ in outfile)
+    
+    print(f"Extracted {log_count} logs for {target_date}")
+
+def main():
+    if len(sys.argv) != 3:
+        print("Usage: python extract_logs.py <input_log_file> <target_date>")
+        sys.exit(1)
+    
+    input_file = sys.argv[1]
+    target_date = sys.argv[2]
+    
+    extract_logs(input_file, target_date)
+
+if __name__ == "__main__":
+    main()
